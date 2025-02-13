@@ -6,8 +6,11 @@ package mr
 // remember to capitalize all names.
 //
 
-import "os"
-import "strconv"
+import (
+	"os"
+	"strconv"
+	"time"
+)
 
 //
 // example to show how to declare the arguments
@@ -22,8 +25,43 @@ type ExampleReply struct {
 	Y int
 }
 
-// Add your RPC definitions here.
+const (
+	//任务未分配状态
+	STATUSUNDISTRIBUTED = iota
+	//任务已分配状态
+	STATUSDISTRIBUTED
+	//任务完成状态
+	STATUSJOBFINISHED
+)
 
+// Add your RPC definitions here.
+type Job struct {
+	Type           string
+	FileNmae       string
+	DistributeTime time.Time
+	Statu          int
+	NReduce        int
+	Id             int
+}
+
+func NewJob(id int, jobType string, fileName string, nReduce int) Job {
+	return Job{
+		Type:           jobType,
+		FileNmae:       fileName,
+		DistributeTime: time.Time{},
+		Statu:          STATUSUNDISTRIBUTED,
+		NReduce:        nReduce,
+		Id:             id,
+	}
+}
+
+type JobRequest struct{}
+
+type JobFeedback struct {
+	Job
+	IsFinished bool
+	TimeStamp  int64
+}
 
 // Cook up a unique-ish UNIX-domain socket name
 // in /var/tmp, for the coordinator.
