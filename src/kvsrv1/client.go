@@ -38,7 +38,11 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 		Key: key,
 	}
 	reply := rpc.GetReply{}
-	for !ck.clnt.Call(ck.server, "KVServer.Get", &args, &reply) {
+	for {
+		ck.clnt.Call(ck.server, "KVServer.Get", &args, &reply)
+		if reply.Err == rpc.OK || reply.Err == rpc.ErrNoKey {
+			break
+		}
 	}
 	// You will have to modify this function.
 	return reply.Value, reply.Version, reply.Err
@@ -79,8 +83,14 @@ func (ck *Clerk) Put(key, value string, version rpc.Tversion) rpc.Err {
 		Version: version,
 	}
 	reply := rpc.PutReply{}
+	ok := ck.clnt.Call(ck.server, "KVServer.Put", &args, &reply)
+	if ok {
+		return reply.Err
+	}
 	for !ck.clnt.Call(ck.server, "KVServer.Put", &args, &reply) {
 	}
-
+	if reply.Err == rpc.ErrVersion {
+		return rpc.ErrMaybe
+	}
 	return reply.Err
 }
